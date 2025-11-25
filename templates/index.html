@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NIDS – Intrusion Detection</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f5f5f5; }
+        h1 { margin-bottom: 10px; }
+        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .error { color: #b30000; margin-top: 10px; }
+        .success { color: #007700; margin-top: 10px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+        th { background-color: #eee; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Network Intrusion Detection (DDoS vs BENIGN)</h1>
+        <p>Upload a network traffic CSV (same format as your training data) and the model will classify each row as <b>DDoS</b> or <b>BENIGN</b>.</p>
+
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".csv" />
+            <button type="submit">Run Prediction</button>
+        </form>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        {% if success %}
+            <div class="success">{{ success }}</div>
+        {% endif %}
+    </div>
+
+    {% if counts %}
+    <div class="card">
+        <h2>Prediction Summary</h2>
+        <ul>
+            {% for label, count in counts.items() %}
+                <li>{{ label }}: {{ count }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if predictions_preview %}
+    <div class="card">
+        <h2>Sample Predictions (first 50 rows)</h2>
+        <table>
+            <thead>
+            <tr>
+                {% for key in predictions_preview[0].keys() %}
+                    <th>{{ key }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in predictions_preview %}
+                <tr>
+                    {% for value in row.values() %}
+                        <td>{{ value }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</body>
+</html>
