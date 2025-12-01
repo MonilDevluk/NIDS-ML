@@ -1,50 +1,60 @@
-import os 
-import pandas as pd 
-from flask import Flask, render_template, request, redirect, url_for
+import os
+import pandas as pd
+from flask import Flask, render_template, request, redirect, url_for, session
 from src.pipeline.predict_pipeline import PredictPipeline
 
 app = Flask(__name__)
+app.secret_key = "secret_key"  # required to store file path
 
-@app.route('/', methods=['GET', 'POST'])
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+@app.route("/", methods=["GET"])
 def index():
-    if request.method == 'POST':
-        # User uploads csv
-        file = request.files.get("file")
-        if file is None or file.filename == "":
-            return render_template("index.html", error="Please upload a valid CSV file.")
-        
-        try:
-            # Read CSV directly from upload stream
-            df = pd.read_csv(file)
-            
-            pipeline = PredictPipeline()
-            preds = pipeline.predict(df)
-            
-            
-            # Attach prediction back to original df
-            result_df = df.copy()
-            result_df['Prediction'] = preds
-            
-            # Calculate counts
-            counts = result_df['Prediction'].value_counts().to_dict()
-            
-            # Show only first 50 rows in table 
-            preview = result_df.head(50).to_dict(orient='records')
-            
-            return render_template(
-                "index.html",
-                predictions_preview=preview,
-                counts=counts,
-                success="Prediction completed successfully!"
-            )
-            
-        except Exception as e:
-            return render_template("index.html", error=f"Error: {str(e)}")
-        
-    # GET request
-    return render_template("index.html")
-if __name__ == '__main__':
-    # Degug = True for development only
-    app.run(debug=True)
-    
-    
+    result = session.get("result")
+    message = session.get("message")
+    session["message"] = None
+
+    return render_template(
+        "index.html",
+        result=result,
+        message=message
+    )
+
+@app.route("/upload", methods=["POST"])
+def upload():
+    file = request.files.get("file")
+
+    if not file or file.filename == "":
+        session["message"] = "Please upload a valid CSV file."
+        return redirect(url_for("index"))
+
+    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(filepath)
+
+    session["uploaded_file"] = filepath
+    session["message"] = "File uploaded successfully!"
+    return redirect(url_for("index"))
+
+@app.route("/predict", methods=["POST"])
+def predict():
+    filepath = session.get("uploaded_file")
+
+    if not filepath or not os.path.exists(filepath):
+        session["message"] = "Upload a file before prediction!"
+        return redirect(url_for("index"))
+
+    df = pd.read_csv(filepath)
+
+    pipeline = PredictPipeline()
+    preds = pipeline.predict(df)
+
+    counts = pd.Series(preds).value_counts().to_dict()
+
+    session["result"] = counts
+    session["message"] = "Prediction completed!"
+    return redirect(url_for("index"))
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
