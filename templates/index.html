@@ -2,83 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NIDS – Intrusion Detection</title>
+    <title>NIDS Classifier</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 30px; background: #f5f5f5; }
-        h1 { margin-bottom: 10px; }
-        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .error { color: #b30000; margin-top: 10px; }
-        .success { color: #007700; margin-top: 10px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
-        th { background-color: #eee; }
+        body { font-family: Arial, sans-serif; background:#f0f0f0; display:flex; align-items:center; justify-content:center; height:100vh; }
+        .container { background:white; padding:35px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); width:350px; text-align:center; }
+        button, input[type="file"] { margin:10px 0; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-size:15px; }
+        .btn-upload { background:#007bff; color:white; width:100%; }
+        .btn-predict { background:#28a745; color:white; width:100%; }
+        .message { margin-top:10px; font-weight:bold; }
+        .error { color:red; }
+        .success { color:green; }
+        .result-box { margin-top:20px; background:#eee; padding:15px; border-radius:8px; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Network Intrusion Detection (DDoS vs BENIGN)</h1>
-        <p>Upload a network traffic CSV (same format as your training data) and the model will classify each row as <b>DDoS</b> or <b>BENIGN</b>.</p>
 
-        <form method="POST" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".csv" />
-            <button type="submit">Run Prediction</button>
-        </form>
+<div class="container">
+    <h2>NIDS - DDoS Detection</h2>
 
-        {% if results %}
-    <h3>Prediction Result:</h3>
-    <ul>
-        {% for r in results %}
-            <li>{{ r }}</li>
-        {% endfor %}
-    </ul>
-        {% endif %}
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".csv" required>
+        <button class="btn-upload" type="submit">Upload File</button>
+    </form>
 
-        {% if error %}
-            <h3 style="color:red;">Error: {{ error }}</h3>
-        {% endif %}
+    <form action="/predict" method="POST">
+        <button class="btn-predict" type="submit">Generate Results</button>
+    </form>
 
-
-        {% if error %}
-            <div class="error">{{ error }}</div>
-        {% endif %}
-        {% if success %}
-            <div class="success">{{ success }}</div>
-        {% endif %}
-    </div>
-
-    {% if counts %}
-    <div class="card">
-        <h2>Prediction Summary</h2>
-        <ul>
-            {% for label, count in counts.items() %}
-                <li>{{ label }}: {{ count }}</li>
-            {% endfor %}
-        </ul>
-    </div>
+    {% if message %}
+        <div class="message">{{ message }}</div>
     {% endif %}
 
-    {% if predictions_preview %}
-    <div class="card">
-        <h2>Sample Predictions (first 50 rows)</h2>
-        <table>
-            <thead>
-            <tr>
-                {% for key in predictions_preview[0].keys() %}
-                    <th>{{ key }}</th>
-                {% endfor %}
-            </tr>
-            </thead>
-            <tbody>
-            {% for row in predictions_preview %}
-                <tr>
-                    {% for value in row.values() %}
-                        <td>{{ value }}</td>
-                    {% endfor %}
-                </tr>
+    {% if result %}
+        <div class="result-box">
+            <h3>Prediction Summary</h3>
+            {% for label, count in result.items() %}
+                <p>{{ label }} : {{ count }}</p>
             {% endfor %}
-            </tbody>
-        </table>
-    </div>
+        </div>
     {% endif %}
+</div>
+
 </body>
 </html>
