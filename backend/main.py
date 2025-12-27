@@ -26,9 +26,11 @@ LABEL_MAP = {
 
 # ------------------ Input schema ------------------
 class PredictInput(BaseModel):
+    destination_port: int
     flow_duration: float
     total_fwd_packets: float
     total_backward_packets: float
+
 
 # ------------------ Routes ------------------
 @app.get("/")
@@ -44,6 +46,7 @@ def predict(input_data: PredictInput):
     features[feature_names.index("Flow Duration")] = input_data.flow_duration
     features[feature_names.index("Total Fwd Packets")] = input_data.total_fwd_packets
     features[feature_names.index("Total Backward Packets")] = input_data.total_backward_packets
+    features[feature_names.index("Destination Port")] = input_data.destination_port
 
     # model expects 2D array
     prediction = model.predict([features])
